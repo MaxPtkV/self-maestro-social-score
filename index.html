@@ -4,69 +4,89 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Social Score Calculator by :SM</title>
-<meta name="description" content="Publicity + Reputation → Social Score. UA/EN, PDF/PNG/ZIP export, autosave, radar charts."/>
+<meta name="description" content="Publicity + Reputation → Social Score. UA/EN, mobile-first UI, ZIP/PNG/PDF export, autosave, radar charts, instructions."/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<!-- ZIP helper (client-side) -->
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
   :root{
     --accent:#C7FF22; --ink:#151515; --muted:#667085; --bg:#FAFAFA; --card:#fff; --stroke:#E6E7EB;
     --ok:#22c55e; --mid:#f59e0b; --low:#ef4444;
     --radius:18px; --shadow:0 14px 40px rgba(0,0,0,.08);
+    --safe-pad:14px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
   a{color:inherit}
-  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 56px}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .wrap{max-width:1120px;margin:0 auto;padding:16px var(--safe-pad) 90px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:sticky;top:0;z-index:50;background:rgba(250,250,250,.92);backdrop-filter:saturate(1.1) blur(6px);padding:8px 0}
   .brand{font-weight:900;letter-spacing:.2px}
   .brand::before{content:":self—maestro"}
-  .lang{display:flex;gap:8px;align-items:center}
-  .chip{border:1px solid var(--stroke);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
+  .lang{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .chip{border:1px solid var(--stroke);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
   .chip.active{background:var(--accent);border-color:#b5ef12}
-  .hero{background:#fff;border:1px solid var(--stroke);border-radius:28px;box-shadow:var(--shadow);padding:40px 28px;text-align:center;margin-bottom:22px}
-  .h1{font-size:44px;line-height:1.08;margin:0 0 10px;font-weight:900}
-  .sub{max-width:780px;margin:0 auto 18px;color:var(--muted)}
+  .hero{background:#fff;border:1px solid var(--stroke);border-radius:20px;box-shadow:var(--shadow);padding:24px 16px;text-align:center;margin-bottom:14px}
+  .h1{font-size:clamp(26px,8.5vw,44px);line-height:1.08;margin:0 0 10px;font-weight:900}
+  .sub{max-width:780px;margin:0 auto 16px;color:var(--muted);font-size:clamp(14px,3.6vw,16px)}
   .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;padding:12px 16px;border-radius:14px;font-weight:800;cursor:pointer}
+  .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;padding:12px 16px;border-radius:14px;font-weight:800;cursor:pointer;width:100%}
   .btn.alt{background:#fff;color:var(--ink);border-color:var(--stroke)}
-  .ribbon{border-radius:20px;padding:14px 16px;margin:22px 0;background:var(--accent);font-weight:900;text-align:center}
+  .ribbon{border-radius:14px;padding:12px 14px;margin:14px 0;background:var(--accent);font-weight:900;text-align:center}
   .grid{display:grid;gap:16px}
-  @media(min-width:980px){.grid-2{grid-template-columns:1.18fr .82fr}}
-  .card{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px}
+  .grid-2{grid-template-columns:1fr} /* mobile-first */
+  .card{background:var(--card);border:1px solid var(--stroke);border-radius:16px;box-shadow:var(--shadow);padding:14px}
   .card h3{margin:0 0 10px;font-size:16px;letter-spacing:.2px}
   .muted{color:var(--muted)}
-  .row{display:grid;grid-template-columns:1fr 130px 130px 100px;gap:10px;align-items:center;margin:10px 0}
-  input[type="number"],input[type="text"],select{width:100%;background:#fff;border:1px solid var(--stroke);color:var(--ink);padding:10px 12px;border-radius:12px;outline:none}
+  .row{display:grid;grid-template-columns:1fr;gap:8px;margin:8px 0}
+  .row>label{font-weight:700}
+  input[type="number"],input[type="text"],select{width:100%;background:#fff;border:1px solid var(--stroke);color:var(--ink);padding:12px;border-radius:12px;outline:none}
   input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .mini{display:flex;gap:8px;flex-wrap:wrap}
   .mini input{width:100%}
   .hr{border-top:1px dashed var(--stroke);margin:12px 0}
   .note{font-size:12px;color:var(--muted);margin-top:6px}
-  .switch{display:flex;align-items:center;gap:8px}
+  .switch{display:flex;gap:8px}
 
   /* results */
-  .score{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
-  .pill{border:1px solid var(--stroke);border-radius:16px;padding:14px;background:#fff}
-  .pill b{font-size:24px}
+  .score{display:grid;grid-template-columns:1fr;gap:10px;margin-top:6px}
+  .pill{border:1px solid var(--stroke);border-radius:16px;padding:12px;background:#fff}
+  .pill b{font-size:22px}
   progress{width:100%;height:12px;border-radius:999px;overflow:hidden;background:#EEF1F5;border:0}
   .ok::-webkit-progress-value{background:var(--ok)}
   .mid::-webkit-progress-value{background:var(--mid)}
   .low::-webkit-progress-value{background:var(--low)}
-  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
   .badge{border-radius:10px;padding:6px 10px;font-size:13px;border:1px solid var(--stroke)}
   .b-ok{background:#E9FFE9}.b-mid{background:#FFF7DA}.b-low{background:#FFE6E6}
-  .right{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+  .right{display:flex;flex-direction:column;gap:8px}
 
-  footer{margin-top:28px;text-align:center;color:var(--muted)}
+  footer{margin-top:20px;text-align:center;color:var(--muted)}
   footer a{font-weight:800;text-decoration:none;border-bottom:1px dashed #cbd5e1}
 
   /* carousel preview wall */
-  .slides{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+  .slides{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
   .slides canvas{width:100%;height:auto;border:1px solid var(--stroke);border-radius:12px;background:#000}
+
+  /* instructions */
+  .instructions h2{margin:0 0 6px}
+  .instructions h3{margin:14px 0 8px}
+  .instructions ul{margin:0 0 8px 18px}
+  .instructions ol{margin:0 0 8px 18px}
+
+  /* desktop enhancements */
+  @media(min-width:980px){
+    .wrap{padding:28px 20px 56px}
+    .grid-2{grid-template-columns:1.18fr .82fr}
+    .btn{width:auto}
+    .row{grid-template-columns:1fr 130px 130px 100px}
+    .score{grid-template-columns:repeat(3,1fr)}
+    .right{flex-direction:row;justify-content:flex-end}
+    .hero{padding:40px 28px;border-radius:28px}
+    .card{border-radius:18px;padding:18px 16px}
+    .ribbon{border-radius:20px;padding:14px 16px}
+  }
 
   @media print{.btn,.chip,header,.ribbon{display:none!important}.wrap{padding:0}.card{break-inside:avoid}}
 </style>
@@ -81,6 +101,7 @@
         <option value="classic">Classic</option>
         <option value="charts">Charts/Radar</option>
       </select>
+      <a class="chip" href="#instructions" id="openInstructions" data-i="openInstr">Instructions</a>
       <button class="chip active" data-lang="en">EN</button>
       <button class="chip" data-lang="ua">UA</button>
     </div>
@@ -91,7 +112,7 @@
     <p class="sub" data-i="subtitle">Measure a personal brand using two dimensions: <b>Publicity</b> (visibility) and <b>Reputation</b> (perception). Default weighting: 50/50. Adjust below.</p>
     <div class="cta">
       <a class="btn" href="#calc" data-i="start">Start Now</a>
-      <a class="btn alt" href="#how" data-i="how">How it works</a>
+      <a class="btn alt" href="#instructions" data-i="how">How it works</a>
     </div>
   </section>
 
@@ -102,12 +123,12 @@
     <section class="card">
       <h3 data-i="inputsTitle">Inputs · enter Raw + Peer Max → we normalize (0–100)</h3>
 
-      <div class="mini" style="align-items:center;justify-content:space-between">
+      <div class="mini" style="align-items:flex-start;justify-content:space-between">
         <div class="switch">
           <input type="checkbox" id="logToggle">
           <label for="logToggle" class="muted" data-i="logNorm">Use log normalization for MMI & SRI (big-scale niches)</label>
         </div>
-        <div class="mini">
+        <div class="mini" style="flex:1 1 100%">
           <button id="calcBtn" class="btn" data-i="calc">Calculate</button>
           <button id="reset" class="btn alt" data-i="reset">Reset</button>
           <button id="clearSaved" class="btn alt" data-i="clear">Clear Saved</button>
@@ -117,30 +138,35 @@
       <div class="grid">
         <div class="card">
           <h3 data-i="pub">Publicity (Visibility)</h3>
+
           <div class="row">
             <label>MMI</label>
             <input type="number" id="mmi_raw" placeholder="Raw"/>
             <input type="number" id="mmi_peer" placeholder="Peer Max"/>
-            <input type="number" id="mmi" placeholder="0–100" title="Normalized" />
+            <input type="number" id="mmi" placeholder="0–100" title="Normalized"/>
           </div>
+
           <div class="row">
             <label>SRI</label>
             <input type="number" id="sri_raw" placeholder="Raw"/>
             <input type="number" id="sri_peer" placeholder="Peer Max"/>
-            <input type="number" id="sri" placeholder="0–100" />
+            <input type="number" id="sri" placeholder="0–100"/>
           </div>
+
           <div class="row">
             <label>SVI</label>
             <input type="number" disabled placeholder="—"/>
             <input type="number" disabled placeholder="—"/>
             <input type="number" id="svi" placeholder="0–100 (Google Trends)"/>
           </div>
+
           <div class="row">
             <label>CFI</label>
             <input type="number" id="cfi_raw" placeholder="Raw"/>
             <input type="number" id="cfi_peer" placeholder="Peer Max"/>
-            <input type="number" id="cfi" placeholder="0–100" />
+            <input type="number" id="cfi" placeholder="0–100"/>
           </div>
+
           <div class="hr"></div>
           <div class="mini">
             <label style="width:100%" data-i="pubW">Weights in Publicity (sum=100)</label>
@@ -153,30 +179,35 @@
 
         <div class="card">
           <h3 data-i="rep">Reputation (Perception)</h3>
+
           <div class="row">
             <label>SI</label>
             <input type="number" disabled placeholder="—"/>
             <input type="number" disabled placeholder="—"/>
             <input type="number" id="si" placeholder="% positive"/>
           </div>
+
           <div class="row">
             <label>CI</label>
             <input type="number" disabled placeholder="—"/>
             <input type="number" disabled placeholder="—"/>
             <input type="number" id="ci" placeholder="0–100"/>
           </div>
+
           <div class="row">
             <label>EI</label>
             <input type="number" id="ei_raw" placeholder="Raw"/>
             <input type="number" id="ei_peer" placeholder="Peer Max"/>
             <input type="number" id="ei" placeholder="0–100"/>
           </div>
+
           <div class="row">
             <label>AI</label>
             <input type="number" id="ai_raw" placeholder="Raw"/>
             <input type="number" id="ai_peer" placeholder="Peer Max"/>
             <input type="number" id="ai" placeholder="0–100"/>
           </div>
+
           <div class="hr"></div>
           <div class="mini">
             <label style="width:100%" data-i="repW">Weights in Reputation (sum=100)</label>
@@ -195,7 +226,7 @@
           <input type="number" id="w_pub" value="50"/>
           <input type="number" id="w_rep" value="50"/>
         </div>
-        <div class="mini">
+        <div class="mini" style="flex:1">
           <button id="normalizeBtn" class="btn alt" data-i="norm">Normalize Raw → %</button>
         </div>
       </div>
@@ -205,6 +236,7 @@
     <!-- RESULTS -->
     <section class="card" id="report">
       <h3 data-i="res">Results</h3>
+
       <div class="score">
         <div class="pill">
           <div data-i="pubS">Publicity</div>
@@ -242,7 +274,14 @@
     </section>
   </div>
 
-  <section class="card" id="how" style="margin-top:16px">
+  <!-- INSTRUCTIONS -->
+  <section class="card instructions" id="instructions" style="margin-top:14px">
+    <h3 data-i="instrTitle">Instructions</h3>
+    <div id="instrBody"></div>
+  </section>
+
+  <!-- HOW -->
+  <section class="card" id="how" style="margin-top:14px">
     <h3 data-i="howTitle">How normalization works</h3>
     <p class="muted" data-i="howText">
       % = <code>min(100, round(raw / peerMax * 100))</code>.
@@ -258,12 +297,12 @@
 </div>
 
 <script>
-/* ===== i18n ===== */
+/* ========= i18n ========= */
 const I = {
   en:{
     title:"Social Score Calculator by :SM",
     subtitle:"Measure a personal brand using two dimensions: <b>Publicity</b> (visibility) and <b>Reputation</b> (perception). Default weighting: 50/50. Adjust below.",
-    start:"Start Now", how:"How it works",
+    start:"Start Now", how:"How it works", openInstr:"Instructions",
     inputsTitle:"Inputs · enter Raw + Peer Max → we normalize (0–100)",
     logNorm:"Use log normalization for MMI & SRI (big-scale niches)",
     calc:"Calculate", reset:"Reset", clear:"Clear Saved",
@@ -281,12 +320,43 @@ const I = {
     howText:"% = <code>min(100, round(raw / peerMax * 100))</code>. For huge scale differences, enable <b>log normalization</b>: <code>round( log10(1+raw) / log10(1+peerMax) * 100 )</code>. SVI is already 0–100 (Google Trends).",
     cover:"Social Score", coverSub:"Publicity + Reputation → Social Score",
     weak:"Weak links", next:"Next moves", interp:"Interpretation",
-    modeLbl:"Carousel"
+    modeLbl:"Carousel",
+    instrTitle:"📘 Instructions for Social Score Calculation",
+    instrHTML: `
+      <ol>
+        <li>Open the <b>Inputs &amp; Scores</b> section and fill in <b>Raw Data</b> (and <b>Peer Max</b> where required).</li>
+        <li><b>Normalized (0–100)</b> and <b>Weighted Score</b> are computed automatically.</li>
+        <li>Open <b>Results</b> to see <b>Publicity</b>, <b>Reputation</b>, and the <b>Final Social Score</b>.</li>
+      </ol>
+      <h3>🎯 Interpretation thresholds</h3>
+      <ul>
+        <li><b>80–100</b> – High-profile, positive public figure</li>
+        <li><b>60–79</b> – Recognized, mostly positive reputation</li>
+        <li><b>40–59</b> – Niche visibility, mixed perception</li>
+        <li><b>&lt;40</b> – Low visibility or negative reputation</li>
+      </ul>
+      <h3>🗂 Data collection notes</h3>
+      <ul>
+        <li><b>Media Mentions</b>: Google News / Meltwater / Brandwatch (last 12 months)</li>
+        <li><b>Social Reach</b>: Sum followers (LinkedIn, X, IG, YouTube, TikTok)</li>
+        <li><b>Search Volume</b>: Google Trends (0–100 relative)</li>
+        <li><b>Content Footprint</b>: Authored posts/articles/videos (12 months)</li>
+        <li><b>Sentiment</b>: % positive mentions (Brandwatch/Meltwater/MonkeyLearn)</li>
+        <li><b>Credibility</b>: Awards, verified, Tier-1 press, keynote talks (0–100)</li>
+        <li><b>Endorsements</b>: Testimonials & LinkedIn recommendations (weighted by authority)</li>
+        <li><b>Authority</b>: Backlinks/citations (Ahrefs/SEMrush/Moz)</li>
+      </ul>
+      <h3>📏 Rule of Thumb</h3>
+      <ul>
+        <li>If metric = % or 0–100 → use direct value.</li>
+        <li>If metric = count with reasonable range → use <code>Raw ÷ Peer Max × 100</code>.</li>
+        <li>If metric = huge scale differences (like followers/site traffic) → use <b>log normalization</b>.</li>
+      </ul>`
   },
   ua:{
     title:"Калькулятор Social Score від :SM",
     subtitle:"Оціни персональний бренд за двома вимірами: <b>Publicity</b> (видимість) і <b>Reputation</b> (сприйняття). За замовчуванням 50/50. Можна змінити нижче.",
-    start:"Почати", how:"Як це працює",
+    start:"Почати", how:"Як це працює", openInstr:"Інструкції",
     inputsTitle:"Поля · введи Raw + Peer Max → ми нормалізуємо (0–100)",
     logNorm:"Використовувати логарифмічну нормалізацію для MMI та SRI",
     calc:"Розрахувати", reset:"Скинути", clear:"Очистити збережене",
@@ -304,12 +374,43 @@ const I = {
     howText:"% = <code>min(100, round(raw / peerMax * 100))</code>. Для великих розривів вмикай <b>лог-нормалізацію</b>: <code>round( log10(1+raw) / log10(1+peerMax) * 100 )</code>. SVI вже у шкалі 0–100.",
     cover:"Social Score", coverSub:"Publicity + Reputation → Social Score",
     weak:"Слабкі ланки", next:"Наступні кроки", interp:"Інтерпретація",
-    modeLbl:"Карусель"
+    modeLbl:"Карусель",
+    instrTitle:"📘 Інструкції з розрахунку Social Score",
+    instrHTML: `
+      <ol>
+        <li>Відкрий розділ <b>Inputs &amp; Scores</b> і заповни <b>Raw Data</b> (та <b>Peer Max</b>, де потрібно).</li>
+        <li><b>Normalized (0–100)</b> та <b>Weighted Score</b> обчислюються автоматично.</li>
+        <li>У <b>Results</b> побачиш <b>Publicity</b>, <b>Reputation</b> і <b>підсумковий Social Score</b>.</li>
+      </ol>
+      <h3>🎯 Пороги інтерпретації</h3>
+      <ul>
+        <li><b>80–100</b> – Високий профіль, позитивний імідж</li>
+        <li><b>60–79</b> – Впізнаваний, здебільшого позитивний</li>
+        <li><b>40–59</b> – Нішева видимість, змішане сприйняття</li>
+        <li><b>&lt;40</b> – Низька видимість або негативна репутація</li>
+      </ul>
+      <h3>🗂 Джерела даних</h3>
+      <ul>
+        <li><b>Media Mentions</b>: Google News / Meltwater / Brandwatch (останні 12 міс.)</li>
+        <li><b>Social Reach</b>: сума підписників (LinkedIn, X, IG, YouTube, TikTok)</li>
+        <li><b>Search Volume</b>: Google Trends (0–100 відносна)</li>
+        <li><b>Content Footprint</b>: власні пости/статті/відео (12 міс.)</li>
+        <li><b>Sentiment</b>: % позитивних згадувань (Brandwatch/Meltwater/MonkeyLearn)</li>
+        <li><b>Credibility</b>: нагороди, верифікації, Tier-1 преса, keynote виступи (0–100)</li>
+        <li><b>Endorsements</b>: відгуки та рекомендації в LinkedIn (з вагою за авторитетом)</li>
+        <li><b>Authority</b>: беклінки/цитування (Ahrefs/SEMrush/Moz)</li>
+      </ul>
+      <h3>📏 Правило великого пальця</h3>
+      <ul>
+        <li>Якщо метрика = % або 0–100 → використовуй без змін.</li>
+        <li>Якщо метрика = лічильник з помірним діапазоном → формула <code>Raw ÷ Peer Max × 100</code>.</li>
+        <li>Якщо метрика = великий розрив масштабів (фоловери/трафік) → <b>лог-нормалізація</b>.</li>
+      </ul>`
   }
 };
 let LANG = (localStorage.getItem('sm_lang') || 'en');
 
-/* ===== helpers ===== */
+/* ========= helpers ========= */
 const $=s=>document.querySelector(s);
 $('#yr').textContent=new Date().getFullYear();
 const clamp01=v=>Math.max(0,Math.min(1,v));
@@ -321,48 +422,41 @@ function norm(raw,peer,log=false){
 }
 function wavg(vals,wts){ const s=wts.reduce((a,b)=>a+b,0)||1; return vals.reduce((a,v,i)=>a+v*(wts[i]/s),0); }
 function colorClass(v){ return v>=80?'ok':v>=60?'mid':'low'; }
-function bucket(score){
-  if(score>=80) return {txt:I[LANG].thr1,cls:'b-ok'};
-  if(score>=60) return {txt:I[LANG].thr2,cls:'b-mid'};
-  return {txt:I[LANG].thr3,cls:'b-low'};
-}
+function bucket(score){ if(score>=80) return {txt:I[LANG].thr1,cls:'b-ok'}; if(score>=60) return {txt:I[LANG].thr2,cls:'b-mid'}; return {txt:I[LANG].thr3,cls:'b-low'}; }
 function applyI18n(){
   const d=I[LANG];
   document.querySelectorAll('[data-i]').forEach(el=>{el.innerHTML=d[el.getAttribute('data-i')]});
-  document.title = d.title;
-  document.documentElement.lang = LANG;
+  document.getElementById('instrBody').innerHTML = d.instrHTML;
+  document.title = d.title; document.documentElement.lang = LANG;
   localStorage.setItem('sm_lang', LANG);
 }
 
-/* ===== autosave (localStorage) ===== */
+/* ========= autosave ========= */
 const INPUT_IDS = ['mmi_raw','mmi_peer','mmi','sri_raw','sri_peer','sri','svi','cfi_raw','cfi_peer','cfi','si','ci','ei_raw','ei_peer','ei','ai_raw','ai_peer','ai','w_mmi','w_sri','w_svi','w_cfi','w_si','w_ci','w_ei','w_ai','w_pub','w_rep','logToggle'];
 function saveState(){
   const state={};
   INPUT_IDS.forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
+    const el=document.getElementById(id); if(!el)return;
     state[id] = el.type==='checkbox' ? el.checked : el.value;
   });
   state.carouselMode = $('#carouselMode').value;
   localStorage.setItem('sm_state', JSON.stringify(state));
 }
 function loadState(){
-  const raw = localStorage.getItem('sm_state');
-  if(!raw) return;
+  const raw = localStorage.getItem('sm_state'); if(!raw) return;
   try{
     const s=JSON.parse(raw);
     INPUT_IDS.forEach(id=>{
-      const el=document.getElementById(id);
-      if(!el || s[id]===undefined) return;
-      if(el.type==='checkbox') el.checked = !!s[id]; else el.value = s[id];
+      const el=document.getElementById(id); if(!el||s[id]===undefined)return;
+      if(el.type==='checkbox') el.checked=!!s[id]; else el.value=s[id];
     });
     if(s.carouselMode) $('#carouselMode').value = s.carouselMode;
   }catch(e){}
 }
 document.addEventListener('input', (e)=>{ if(e.target.matches('input,select')) saveState(); });
-$('#clearSaved').addEventListener('click', ()=>{ localStorage.removeItem('sm_state'); alert('Saved state cleared'); });
+$('#clearSaved').addEventListener('click', ()=>{ localStorage.removeItem('sm_state'); alert(LANG==='ua'?'Збережені дані очищено':'Saved state cleared'); });
 
-/* ===== normalization & calc ===== */
+/* ========= normalization & calc ========= */
 $('#normalizeBtn').addEventListener('click', ()=>{
   const log = $('#logToggle').checked;
   $('#mmi').value = norm($('#mmi_raw').value, $('#mmi_peer').value, log);
@@ -414,7 +508,7 @@ $('#reset').addEventListener('click', ()=>{
   saveState();
 });
 
-/* ===== Canvas helpers for slides ===== */
+/* ========= Canvas helpers for slides ========= */
 function makeCanvas(w=1080,h=1350){ const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); return {c,g}; }
 function bg(g){ g.fillStyle='#0B0C10'; g.fillRect(0,0,1080,1350); }
 function titleC(g,txt,y=220){ g.fillStyle='#FFFFFF'; g.font='900 92px Inter, Arial'; g.textAlign='center'; g.fillText(txt,540,y); }
@@ -434,8 +528,6 @@ function footer(g){
   g.fillStyle='#111'; g.font='900 32px Inter, Arial'; g.textAlign='left'; g.fillText(':self—maestro',32,1318);
   g.textAlign='right'; g.font='800 28px Inter, Arial'; g.fillText('selfmaestro.co',1048,1318);
 }
-
-/* Simple bars (0–100) for publicity/reputation */
 function bars(g,labels,values,x=140,y=480,w=800,h=300){
   const n=labels.length, gap=16, barH=(h - gap*(n-1))/n;
   for(let i=0;i<n;i++){
@@ -446,57 +538,23 @@ function bars(g,labels,values,x=140,y=480,w=800,h=300){
     g.fillText(`${labels[i]} — ${Math.round(values[i])}`, x, y + i*(barH+gap) - 10);
   }
 }
-
-/* Radar 8 metrics on 500px circle */
 function radar(g,values,labels,cx=540,cy=750,r=350){
-  const N=values.length;
-  // axes
-  g.strokeStyle='#2A3546'; g.lineWidth=2;
-  for(let i=0;i<N;i++){
-    const a = -Math.PI/2 + i*(2*Math.PI/N);
-    g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx + r*Math.cos(a), cy + r*Math.sin(a)); g.stroke();
-  }
-  // rings
-  for(let k=1;k<=4;k++){
-    g.beginPath();
-    for(let i=0;i<N;i++){
-      const a = -Math.PI/2 + i*(2*Math.PI/N);
-      const rr = r*(k/4);
-      const x = cx + rr*Math.cos(a), y = cy + rr*Math.sin(a);
-      if(i===0) g.moveTo(x,y); else g.lineTo(x,y);
-    }
-    g.closePath(); g.stroke();
-  }
-  // polygon
-  g.beginPath();
-  for(let i=0;i<N;i++){
-    const a = -Math.PI/2 + i*(2*Math.PI/N);
-    const rr = r*(Math.max(0,Math.min(100,values[i]))/100);
-    const x = cx + rr*Math.cos(a), y = cy + rr*Math.sin(a);
-    if(i===0) g.moveTo(x,y); else g.lineTo(x,y);
-  }
-  g.closePath(); g.fillStyle='rgba(199,255,34,0.35)'; g.fill(); g.strokeStyle='#C7FF22'; g.lineWidth=3; g.stroke();
-
-  // labels
+  const N=values.length; g.strokeStyle='#2A3546'; g.lineWidth=2;
+  for(let i=0;i<N;i++){ const a=-Math.PI/2+i*(2*Math.PI/N); g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx+r*Math.cos(a), cy+r*Math.sin(a)); g.stroke(); }
+  for(let k=1;k<=4;k++){ g.beginPath(); for(let i=0;i<N;i++){ const a=-Math.PI/2+i*(2*Math.PI/N), rr=r*(k/4); const x=cx+rr*Math.cos(a), y=cy+rr*Math.sin(a); if(i===0) g.moveTo(x,y); else g.lineTo(x,y);} g.closePath(); g.stroke(); }
+  g.beginPath(); for(let i=0;i<N;i++){ const a=-Math.PI/2+i*(2*Math.PI/N), rr=r*(Math.max(0,Math.min(100,values[i]))/100); const x=cx+rr*Math.cos(a), y=cy+rr*Math.sin(a); if(i===0) g.moveTo(x,y); else g.lineTo(x,y);} g.closePath(); g.fillStyle='rgba(199,255,34,0.35)'; g.fill(); g.strokeStyle='#C7FF22'; g.lineWidth=3; g.stroke();
   g.fillStyle='#E8ECF1'; g.font='600 28px Inter, Arial'; g.textAlign='center';
-  for(let i=0;i<N;i++){
-    const a = -Math.PI/2 + i*(2*Math.PI/N);
-    const x = cx + (r+36)*Math.cos(a), y = cy + (r+36)*Math.sin(a);
-    g.fillText(labels[i], x, y);
-  }
+  for(let i=0;i<N;i++){ const a=-Math.PI/2+i*(2*Math.PI/N); const x=cx+(r+36)*Math.cos(a), y=cy+(r+36)*Math.sin(a); g.fillText(labels[i], x, y); }
 }
 
-/* ===== Export slides + ZIP ===== */
-let lastSlidePNGs = []; // {name, dataURL}
+/* ========= Export slides + ZIP ========= */
+let lastSlidePNGs = [];
 function addPreview(canvas){ const wall=$('#slidesWall'); wall.appendChild(canvas); }
 function dlDataURL(name, dataURL){ const a=document.createElement('a'); a.href=dataURL; a.download=name; a.click(); }
 async function buildZipAndDownload(){
-  if(!lastSlidePNGs.length){ alert('No slides yet. Click “Export Carousel” first.'); return; }
+  if(!lastSlidePNGs.length){ alert(LANG==='ua'?'Спершу згенеруй слайди':'Generate slides first'); return; }
   const zip = new JSZip();
-  lastSlidePNGs.forEach((s, i)=>{
-    const base64 = s.dataURL.split(',')[1];
-    zip.file(s.name, base64, {base64:true});
-  });
+  lastSlidePNGs.forEach(s=> zip.file(s.name, s.dataURL.split(',')[1], {base64:true}) );
   const blob = await zip.generateAsync({type:'blob'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'social-score-slides.zip'; a.click();
   URL.revokeObjectURL(a.href);
@@ -504,7 +562,7 @@ async function buildZipAndDownload(){
 $('#downloadZip').addEventListener('click', buildZipAndDownload);
 
 $('#makeSlides').addEventListener('click', ()=>{
-  const {publicity,reputation,social,weak,metrics}=calc(); // refresh
+  const {publicity,reputation,social,weak,metrics}=calc();
   $('#slidesWall').innerHTML=''; lastSlidePNGs = [];
   const yr = new Date().getFullYear();
   const mode = $('#carouselMode').value;
@@ -518,14 +576,12 @@ $('#makeSlides').addEventListener('click', ()=>{
   })();
 
   if(mode==='classic'){
-    // 2) Publicity (bars)
     (()=>{ const {c,g}=makeCanvas(); bg(g); chip(g,'Publicity',72,120);
       titleC(g, `${Math.round(publicity)}/100`, 240);
       bars(g, ['MMI','SRI','SVI','CFI'], metrics.slice(0,4));
       footer(g); addPreview(c);
       lastSlidePNGs.push({name:'02-publicity.png', dataURL:c.toDataURL('image/png')});
     })();
-    // 3) Reputation (bars)
     (()=>{ const {c,g}=makeCanvas(); bg(g); chip(g,'Reputation',72,120);
       titleC(g, `${Math.round(reputation)}/100`, 240);
       bars(g, ['SI','CI','EI','AI'], metrics.slice(4,8));
@@ -533,15 +589,12 @@ $('#makeSlides').addEventListener('click', ()=>{
       lastSlidePNGs.push({name:'03-reputation.png', dataURL:c.toDataURL('image/png')});
     })();
   } else {
-    // Charts/Radar
-    // 2) Bars (all 8)
     (()=>{ const {c,g}=makeCanvas(); bg(g); chip(g,'Metrics',72,120);
       titleC(g, 'Scores (0–100)', 240);
       bars(g, ['MMI','SRI','SVI','CFI','SI','CI','EI','AI'], metrics, 80, 360, 920, 520);
       footer(g); addPreview(c);
       lastSlidePNGs.push({name:'02-bars.png', dataURL:c.toDataURL('image/png')});
     })();
-    // 3) Radar
     (()=>{ const {c,g}=makeCanvas(); bg(g); chip(g,'Radar',72,120);
       titleC(g, `${Math.round(social)}/100`, 240);
       radar(g, metrics, ['MMI','SRI','SVI','CFI','SI','CI','EI','AI']);
@@ -554,25 +607,26 @@ $('#makeSlides').addEventListener('click', ()=>{
   (()=>{ const {c,g}=makeCanvas(); bg(g); chip(g, I[LANG].interp,72,120);
     const cat=bucket(social); titleC(g, `${Math.round(social)}/100`, 240);
     subC(g, cat.txt, 320, 940);
-    textC(g, (weak.length? `${I[LANG].weak}: ${weak.join(', ')}` : 'No weak metrics below 60.'), 470, 980, 50);
+    textC(g, (weak.length? `${I[LANG].weak}: ${weak.join(', ')}` : (LANG==='ua'?'Немає метрик нижче 60.':'No weak metrics below 60.')), 470, 980, 50);
     textC(g, `${I[LANG].next}: Recalculate monthly • Strengthen CI • Collaborate for EI/AI • Publish consistently`, 640, 1000, 48);
     footer(g); addPreview(c);
     lastSlidePNGs.push({name:'04-summary.png', dataURL:c.toDataURL('image/png')});
   })();
 
-  // auto-download individual PNGs (optional — коментни наступні 3 рядки, якщо не потрібно)
-  lastSlidePNGs.forEach(s=>{ dlDataURL(s.name, s.dataURL); });
+  // авто-скачування PNG (прибери якщо не потрібно)
+  lastSlidePNGs.forEach(s=> dlDataURL(s.name, s.dataURL) );
 });
 
+/* ========= language toggle ========= */
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.chip[data-lang]').forEach(x=>x.classList.remove('active'));
   b.classList.add('active'); LANG=b.dataset.lang; applyI18n(); saveState();
 }));
 
-/* ===== boot ===== */
+/* ========= boot ========= */
 applyI18n();
 loadState();
-document.querySelectorAll('[data-lang]').forEach(b=>{ if(b.dataset.lang===LANG) b.classList.add('active'); else b.classList.remove('active'); });
+document.querySelectorAll('.chip[data-lang]').forEach(b=>{ if(b.dataset.lang===LANG) b.classList.add('active'); else b.classList.remove('active'); });
 </script>
 </body>
 </html>
